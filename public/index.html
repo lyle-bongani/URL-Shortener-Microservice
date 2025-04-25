@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener Microservice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>URL Shortener Microservice</h1>
+
+        <main>
+            <section>
+                <h2>Create a Short URL</h2>
+                <form action="/api/shorturl" method="POST">
+                    <fieldset>
+                        <legend>URL Shortener</legend>
+                        <label for="url_input">URL:</label>
+                        <input id="url_input" type="text" name="url" placeholder="https://www.example.com" required>
+                        <input type="submit" value="Shorten URL">
+                    </fieldset>
+                </form>
+            </section>
+
+            <section class="user-stories">
+                <h3>Example Usage:</h3>
+                <ul>
+                    <li>
+                        <p>POST a URL to <code>/api/shorturl</code> to get a JSON response with
+                            <code>original_url</code> and <code>short_url</code> properties:</p>
+                        <pre><code>{ original_url : 'https://example.com', short_url : 1 }</code></pre>
+                    </li>
+                    <li>
+                        <p>Visit <code>/api/shorturl/1</code> to be redirected to the original URL.</p>
+                    </li>
+                </ul>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>This project is part of the freeCodeCamp APIs and Microservices certification.</p>
+        </footer>
+    </div>
+</body>
+
+</html>
