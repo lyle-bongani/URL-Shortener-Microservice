@@ -8,15 +8,26 @@ const Url = require('../models/Url');
 function isValidUrl(url) {
     try {
         const urlObj = new URL(url);
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+        // Make sure the URL has a protocol and hostname
+        return (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') && urlObj.hostname;
     } catch (err) {
         return false;
     }
 }
 
+// Helper function to perform DNS lookup with a Promise
+function dnsLookupPromise(hostname) {
+    return new Promise((resolve, reject) => {
+        dns.lookup(hostname, (err, address) => {
+            if (err) reject(err);
+            else resolve(address);
+        });
+    });
+}
+
 // POST a new URL to create a short URL
 router.post('/shorturl', async (req, res) => {
-    const { url } = req.body;
+    let { url } = req.body;
 
     // Validate URL format
     if (!isValidUrl(url)) {
@@ -27,11 +38,9 @@ router.post('/shorturl', async (req, res) => {
         // Extract hostname for DNS lookup
         const urlObj = new URL(url);
 
-        // Use DNS lookup to validate the hostname
-        dns.lookup(urlObj.hostname, async (err) => {
-            if (err) {
-                return res.json({ error: 'invalid url' });
-            }
+        try {
+            // Verify the hostname exists with DNS lookup
+            await dnsLookupPromise(urlObj.hostname);
 
             // Check if URL already exists in database
             let urlDoc = await Url.findOne({ original_url: url });
@@ -60,35 +69,38 @@ router.post('/shorturl', async (req, res) => {
                 original_url: url,
                 short_url
             });
-        });
+        } catch (dnsErr) {
+            // DNS lookup failed - hostname doesn't exist
+            return res.json({ error: 'invalid url' });
+        }
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Server error' });
+        return res.json({ error: 'Server error' });
     }
 });
 
 // GET request to redirect to the original URL
 router.get('/shorturl/:short_url', async (req, res) => {
     try {
-        const { short_url } = req.params;
+        const short_url = parseInt(req.params.short_url);
 
         // Validate short_url is a number
-        if (isNaN(Number(short_url))) {
-            return res.status(400).json({ error: 'Wrong format' });
+        if (isNaN(short_url)) {
+            return res.json({ error: 'invalid url' });
         }
 
         // Find the URL document
-        const urlDoc = await Url.findOne({ short_url: Number(short_url) });
+        const urlDoc = await Url.findOne({ short_url });
 
         if (!urlDoc) {
-            return res.status(404).json({ error: 'No short URL found for the given input' });
+            return res.json({ error: 'invalid url' });
         }
 
         // Redirect to the original URL
         return res.redirect(urlDoc.original_url);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Server error' });
+        return res.json({ error: 'invalid url' });
     }
 });
 
