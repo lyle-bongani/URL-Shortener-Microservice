@@ -3,16 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-const connectDB = require('./config/db');
 
 // Initialize Express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Configure CORS for all routes - allow all origins
+app.use(cors({ origin: '*' }));
 
 // Middleware
-app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
